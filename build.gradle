@@ -1,0 +1,30 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'SwingPad',
+                'Implementation-Version': version,
+                'Main-Class': 'StartGui'
+    }
+    baseName = 'SwingPad'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile group: 'com.rover12421.opensource', name: 'JFontChooser', version: '1.0.5-3'
+    implementation group: 'org.jasypt', name: 'jasypt', version: '1.9.3'
+
+}
