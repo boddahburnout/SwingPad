@@ -7,11 +7,13 @@ abstract class SwingPadBase implements Serializable {
     Font font;
     Color bg;
     Color text;
+    String data;
 
-    public SwingPadBase(Font font, Color bg, Color text) {
+    public SwingPadBase(Font font, Color bg, Color text, String data) {
         this.font=font;
         this.bg=bg;
         this.text=text;
+        this.data=data;
     }
 
     public Font getFont() {
@@ -36,5 +38,13 @@ abstract class SwingPadBase implements Serializable {
 
     public void setText(Color text) {
         this.text = text;
+    }
+
+    public String getData() {
+        return data;
+    }
+
+    public void setData(String data) {
+        this.data = data;
     }
 }

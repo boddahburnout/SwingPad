@@ -36,15 +36,21 @@ public class PadFrame {
     MenuItem exitItem = new MenuItem("Exit");
 
     Menu format = new Menu("Format");
-    MenuItem font = new MenuItem("Font");
     CheckboxMenuItem wordWrapCB = new CheckboxMenuItem("Word Wrap", true);
 
     Menu editor = new Menu("Editor");
+    MenuItem font = new MenuItem("Font");
     MenuItem fontColor = new MenuItem("Font Color");
     MenuItem bgColor = new MenuItem("Background Color");
 
     Menu help = new Menu("Help");
     MenuItem aboutItem = new MenuItem("About SwingPad");
+
+    Menu swingPadMenu = new Menu("SwingPad File");
+    MenuItem spBgColor = new MenuItem("Background Color");
+    MenuItem spFontColor = new MenuItem("Font Color");
+    MenuItem spFont = new MenuItem("Font");
+    MenuItem changePW = new MenuItem("Change Password");
 
     TextUtils textUtils = new TextUtils();
 
@@ -54,7 +60,7 @@ public class PadFrame {
 
     FileNameExtensionFilter textFilter = new FileNameExtensionFilter("Text File","txt");
     FileNameExtensionFilter protectedFilter = new FileNameExtensionFilter("SwingPad Protected", "spp");
-    FileNameExtensionFilter swingPadFilter = new FileNameExtensionFilter("SwingPad Text", "sp");
+    FileNameExtensionFilter swingPadFilter = new FileNameExtensionFilter("SwingPad Text", "spt");
 
     JFileChooser jFileChooser = new JFileChooser();
     JFontChooser jFontChooser;
@@ -83,6 +89,10 @@ public class PadFrame {
         jFrame.setSize(1600, 1600);
         jFrame.add(scroll);
 
+        swingPadMenu.add(spFont);
+        swingPadMenu.add(spBgColor);
+        swingPadMenu.add(spFontColor);
+        swingPadMenu.add(changePW);
         help.add(aboutItem);
         format.add(wordWrapCB);
         format.add(font);
@@ -142,13 +152,15 @@ public class PadFrame {
                                 }
 
                                 if (jFileChooser.getFileFilter().getDescription().equals("SwingPad Text")) {
-                                    if (!path.contains(".sp")) {
-                                        path = path+".sp";
+                                    if (!path.contains(".spt")) {
+                                        path = path+".spt";
                                     }
-                                    swingPad = new SwingPad(padField.getFont(), padField.getBackground(), padField.getForeground());
-                                    new Serialize(path, "" , swingPadProtected);
+                                    swingPad = new SwingPad(padField.getFont(), padField.getBackground(), padField.getForeground(), padField.getText());
+                                    new Serialize(path, "" , swingPad);
                                     textFile = jFileChooser.getSelectedFile();
                                     jFrame.setTitle(textFile.getName()+" - SwingPad");
+                                    changePW.setEnabled(false);
+                                    menuBar.add(swingPadMenu);
                                 }
 
                                 if (jFileChooser.getFileFilter().getDescription().equals("SwingPad Protected")) {
@@ -162,6 +174,8 @@ public class PadFrame {
                                     new Serialize(path, "" , swingPadProtected);
                                     textFile = jFileChooser.getSelectedFile();
                                     jFrame.setTitle(textFile.getName()+" - SwingPad");
+                                    changePW.setEnabled(true);
+                                    menuBar.add(swingPadMenu);
                                 }
 
                                if (jFileChooser.getFileFilter().getDescription() == "All Files") {
@@ -171,6 +185,8 @@ public class PadFrame {
                                        textUtils.save(Paths.get(path), padField.getText());
                                        textFile = jFileChooser.getSelectedFile();
                                        jFrame.setTitle(textFile.getName()+" - SwingPad");
+                                       changePW.setEnabled(false);
+                                       menuBar.add(swingPadMenu);
                                    }
                                }
                             }
@@ -200,15 +216,15 @@ public class PadFrame {
                         }
                     }
 
-                    if (textFile.getAbsoluteFile().getName().contains(".sp")) {
-                        swingPad = new SwingPad(padField.getFont(), padField.getBackground(), padField.getForeground());
-                        new Serialize(textFile.toPath().toString(), "" , swingPadProtected);
+                    if (textFile.getAbsoluteFile().getName().contains(".spt")) {
+                        swingPad = new SwingPad(padField.getFont(), padField.getBackground(), padField.getForeground(), padField.getText());
+                        new Serialize(textFile.getAbsoluteFile().getAbsolutePath(), "" , swingPad);
                         jFrame.setTitle(jFrame.getTitle().replaceAll("\\"+asterisk, ""));
                     }
 
                     if (textFile.getAbsoluteFile().getName().contains(".spp")) {
-                        SwingPadProtected saveProtected = new SwingPadProtected(jFrame.getFont(), jFrame.getBackground(), jFrame.getForeground(), swingPadProtected.getPass(), padField.getText());
-                        new Serialize(textFile.getAbsoluteFile().getAbsolutePath(), "", saveProtected);
+                        swingPadProtected = new SwingPadProtected(padField.getFont(), padField.getBackground(), padField.getForeground(), encrypt.Encrypt(swingPadProtected.getPass().toString()), encrypt.Encrypt(padField.getText()));
+                        new Serialize(textFile.getAbsoluteFile().getAbsolutePath(), "", swingPadProtected);
                         jFrame.setTitle(jFrame.getTitle().replaceAll("\\"+asterisk, ""));
                     }
                 } else {
@@ -221,6 +237,7 @@ public class PadFrame {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 jFileChooser.setDialogTitle("Open file");
+                jFileChooser.setSelectedFile(new File(System.getProperty("user.dir")));
                 int option = jFileChooser.showOpenDialog(jFrame);
 
                 if (jFileChooser.getSelectedFile() == null) return;
@@ -228,12 +245,17 @@ public class PadFrame {
                 if (jFileChooser.getSelectedFile().getAbsoluteFile().getName().contains(".spp")) {
                     swingPadProtected = (SwingPadProtected) new Unserialize().Unserialize(jFileChooser.getSelectedFile().getAbsolutePath(), "");
                     Object o = JOptionPane.showInputDialog(jFrame, "Password");
-                    swingPadProtected.setPass(encrypt.Decrypt((String) swingPadProtected.getPass()));
                     swingPadProtected.setData(encrypt.Decrypt(swingPadProtected.getData()));
+                    swingPadProtected.setPass(encrypt.Decrypt(swingPadProtected.getPass().toString()));
                     if (o.equals(swingPadProtected.getPass())) {
                         textFile = new File(jFileChooser.getSelectedFile().getPath());
                         jFrame.setTitle(jFileChooser.getSelectedFile().getName() + " - SwingPad");
                         padField.setText(swingPadProtected.getData());
+                        padField.setFont(swingPadProtected.getFont());
+                        padField.setForeground(swingPadProtected.getText());
+                        padField.setBackground(swingPadProtected.getBg());
+                        changePW.setEnabled(true);
+                        menuBar.add(swingPadMenu);
                     } else {
                         JOptionPane.showMessageDialog(jFrame, "Incorrect Password!");
                     }
@@ -244,10 +266,15 @@ public class PadFrame {
                     if (!path.contains(".sp")) {
                         path = path+".sp";
                     }
-                    swingPad = new SwingPad(padField.getFont(), padField.getBackground(), padField.getForeground());
-                    new Serialize(path, "" , swingPadProtected);
+                    swingPad = new SwingPad(padField.getFont(), padField.getBackground(), padField.getForeground() , padField.getText());
+                    new Serialize(path, "" , swingPad);
                     textFile = jFileChooser.getSelectedFile();
                     jFrame.setTitle(textFile.getName()+" - SwingPad");
+                    padField.setFont(swingPad.getFont());
+                    padField.setForeground(swingPad.getText());
+                    padField.setBackground(swingPad.getBg());
+                    changePW.setEnabled(false);
+                    menuBar.add(swingPadMenu);
                 }
 
                 if (jFileChooser.getSelectedFile().getAbsoluteFile().getName().contains(".txt")) {
@@ -269,6 +296,16 @@ public class PadFrame {
                 padField.setText("");
                 textFile = new File("Untitled");
                 jFrame.setTitle("Untitled - SwingPad");
+                wordWrapCB.setState(userSettings.getWordWrap());
+                padField.setForeground(userSettings.getFontColor());
+                padField.setBackground(userSettings.getBgColor());
+                padField.setFont(userSettings.getFont());
+                padField.setLineWrap(userSettings.getWordWrap());
+                padField.setCaretColor(userSettings.getFontColor());
+                changePW.setEnabled(false);
+                if (menuBar.getMenuCount() == 5) {
+                    menuBar.remove(swingPadMenu);
+                }
             }
         });
 
@@ -361,6 +398,63 @@ public class PadFrame {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 JOptionPane.showMessageDialog(jFrame, "SwingPad Ver 1.0 by Darthkota98", "SwingPad About", JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+
+        spFont.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                jFontChooser = new JFontChooser();
+                jFontChooser.showDialog(jColorChooser);
+                Font font = jFontChooser.getSelectedFont();
+                if (textFile.getName().contains(".spp")) {
+                    swingPadProtected.setFont(font);
+                    padField.setFont(font);
+                    return;
+                }
+                if (textFile.getName().contains(".spt")) {
+                    swingPad.setFont(font);
+                    padField.setFont(font);
+                }
+            }
+        });
+
+        spBgColor.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                JDialog dialog = JColorChooser.createDialog(null, "Font Color", true, jColorChooser,null,null);
+                dialog.setVisible(true);
+                if (textFile.getName().contains(".spp")) {
+                    swingPadProtected.setBg(jColorChooser.getColor());
+                    padField.setBackground(jColorChooser.getColor());
+                }
+                if (textFile.getName().contains(".spt")) {
+                    swingPadProtected.setBg(jColorChooser.getColor());
+                    padField.setBackground(jColorChooser.getColor());
+                }
+                }
+        });
+
+        spFontColor.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                JDialog dialog = JColorChooser.createDialog(null, "Font Color", true, jColorChooser,null,null);
+                dialog.setVisible(true);
+                if (textFile.getName().contains(".spp")) {
+                    swingPadProtected.setText(jColorChooser.getColor());
+                    padField.setForeground(jColorChooser.getColor());
+                }
+                if (textFile.getName().contains(".spt")) {
+                    swingPadProtected.setText(jColorChooser.getColor());
+                    padField.setForeground(jColorChooser.getColor());
+                }
+            }
+        });
+
+        changePW.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+
             }
         });
 
