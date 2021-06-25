@@ -95,7 +95,7 @@ public class PadFrame {
         swingPadMenu.add(changePW);
         help.add(aboutItem);
         format.add(wordWrapCB);
-        format.add(font);
+        editor.add(font);
         editor.add(fontColor);
         editor.add(bgColor);
         file.add(newItem);
@@ -147,7 +147,7 @@ public class PadFrame {
                                         path = path+".txt";
                                     }
                                     textUtils.save(Paths.get(path), padField.getText());
-                                    textFile = jFileChooser.getSelectedFile();
+                                    textFile = new File(path);
                                     jFrame.setTitle(textFile.getName()+" - SwingPad");
                                 }
 
@@ -157,7 +157,7 @@ public class PadFrame {
                                     }
                                     swingPad = new SwingPad(padField.getFont(), padField.getBackground(), padField.getForeground(), padField.getText());
                                     new Serialize(path, "" , swingPad);
-                                    textFile = jFileChooser.getSelectedFile();
+                                    textFile = new File(path);
                                     jFrame.setTitle(textFile.getName()+" - SwingPad");
                                     changePW.setEnabled(false);
                                     menuBar.add(swingPadMenu);
@@ -172,7 +172,7 @@ public class PadFrame {
                                     swingPadProtected.setData(encrypt.Encrypt(swingPadProtected.getData()));
                                     swingPadProtected.setPass(encrypt.Encrypt((String) swingPadProtected.getPass()));
                                     new Serialize(path, "" , swingPadProtected);
-                                    textFile = jFileChooser.getSelectedFile();
+                                    textFile = new File(path);
                                     jFrame.setTitle(textFile.getName()+" - SwingPad");
                                     changePW.setEnabled(true);
                                     menuBar.add(swingPadMenu);
@@ -183,7 +183,7 @@ public class PadFrame {
                                        JOptionPane.showMessageDialog(jFrame, "Please select an extension to save a file");
                                    } else {
                                        textUtils.save(Paths.get(path), padField.getText());
-                                       textFile = jFileChooser.getSelectedFile();
+                                       textFile = new File(path);
                                        jFrame.setTitle(textFile.getName()+" - SwingPad");
                                        changePW.setEnabled(false);
                                        menuBar.add(swingPadMenu);
@@ -261,15 +261,16 @@ public class PadFrame {
                     }
                 }
 
-                if (jFileChooser.getFileFilter().getDescription().equals("SwingPad Text")) {
+                if (jFileChooser.getSelectedFile().getAbsoluteFile().getName().contains(".spt")) {
                     String path = jFileChooser.getSelectedFile().toPath().toString();
-                    if (!path.contains(".sp")) {
-                        path = path+".sp";
+                    if (!path.contains(".spt")) {
+                        path = path+".spt";
                     }
                     swingPad = new SwingPad(padField.getFont(), padField.getBackground(), padField.getForeground() , padField.getText());
                     new Serialize(path, "" , swingPad);
                     textFile = jFileChooser.getSelectedFile();
                     jFrame.setTitle(textFile.getName()+" - SwingPad");
+                    padField.setText(swingPad.getData());
                     padField.setFont(swingPad.getFont());
                     padField.setForeground(swingPad.getText());
                     padField.setBackground(swingPad.getBg());
@@ -429,7 +430,7 @@ public class PadFrame {
                     padField.setBackground(jColorChooser.getColor());
                 }
                 if (textFile.getName().contains(".spt")) {
-                    swingPadProtected.setBg(jColorChooser.getColor());
+                    swingPad.setBg(jColorChooser.getColor());
                     padField.setBackground(jColorChooser.getColor());
                 }
                 }
@@ -445,7 +446,7 @@ public class PadFrame {
                     padField.setForeground(jColorChooser.getColor());
                 }
                 if (textFile.getName().contains(".spt")) {
-                    swingPadProtected.setText(jColorChooser.getColor());
+                    swingPad.setText(jColorChooser.getColor());
                     padField.setForeground(jColorChooser.getColor());
                 }
             }
@@ -454,7 +455,9 @@ public class PadFrame {
         changePW.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-
+                String newPassword = JOptionPane.showInputDialog(jFrame, "Password");
+                swingPadProtected.setPass(newPassword);
+                JOptionPane.showMessageDialog(jFrame, "Password updated!");
             }
         });
 
